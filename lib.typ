@@ -9,6 +9,7 @@
 #import "src/renderer.typ": render-score
 #import "src/render-clef-key-time.typ": clef-advance, key-sig-advance, time-sig-advance
 #import "src/constants.typ": default-staff-space
+#import "src/glyph-metadata.typ": make-music-font-config
 
 /// Parse a time signature string like "4/4", "3/4", "6/8" into (upper, lower, symbol).
 #let parse-time-sig(ts) = {
@@ -77,9 +78,13 @@
   measure-numbers: "system",
   relative-octave: false,
   measures-per-line: none,
+  music-font: "Bravura",
+  music-font-metadata: none,
 ) = {
   // Handle convenience: if staves is empty but there's something to render, return empty
   if staves.len() == 0 { return }
+
+  let font-config = make-music-font-config(font: music-font, metadata: music-font-metadata)
 
   // Parse time signature
   let ts = parse-time-sig(time)
@@ -95,10 +100,10 @@
   // Internal helper: compute prefix width in staff-space units for a given system
   let prefix-width-sp(sp-unit, clef-name, show-time) = {
     let pf = 0.5 // left margin
-    pf += clef-advance(clef-name: clef-name, sp: 1.0)
-    pf += key-sig-advance(key, sp: 1.0)
+    pf += clef-advance(clef-name: clef-name, sp: 1.0, font-config: font-config)
+    pf += key-sig-advance(key, sp: 1.0, font-config: font-config)
     if show-time {
-      pf += time-sig-advance(ts.upper, ts.lower, symbol: ts.symbol, sp: 1.0)
+      pf += time-sig-advance(ts.upper, ts.lower, symbol: ts.symbol, sp: 1.0, font-config: font-config)
     }
     pf += 1.0  // music-start padding
     pf
@@ -217,6 +222,7 @@
         lyricist: if is-first { lyricist } else { none },
         show-time: is-first,
         fingering-positions: staves.map(s => s.at("fingering-position", default: "above")),
+        font-config: font-config,
       )
       v(system-spacing)
     }
@@ -245,6 +251,8 @@
   staff-size: default-staff-space,
   width: auto,
   measures-per-line: none,
+  music-font: "Bravura",
+  music-font-metadata: none,
 ) = {
   score(
     staves: ((clef: clef, music: music),),
@@ -255,6 +263,8 @@
     staff-size: staff-size,
     width: width,
     measures-per-line: measures-per-line,
+    music-font: music-font,
+    music-font-metadata: music-font-metadata,
   )
 }
 
@@ -269,6 +279,8 @@
   composer: none,
   staff-size: default-staff-space,
   width: auto,
+  music-font: "Bravura",
+  music-font-metadata: none,
 ) = {
   score(
     staves: ((clef: clef, music: music),),
@@ -278,6 +290,8 @@
     composer: composer,
     staff-size: staff-size,
     width: width,
+    music-font: music-font,
+    music-font-metadata: music-font-metadata,
   )
 }
 
