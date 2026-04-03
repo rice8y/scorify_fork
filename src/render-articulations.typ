@@ -5,6 +5,7 @@
 // Dynamics are drawn below the staff using SMuFL dynamic glyphs.
 
 #import "constants.typ": smufl-articulations, smufl-dynamics, default-music-font-size-factor
+#import "glyph-metadata.typ": make-music-font-config
 
 /// Draw articulation marks for a note or chord.
 ///
@@ -15,9 +16,10 @@
 /// - stem-dir: "up" or "down"
 /// - y-top: absolute y of the top staff line
 /// - sp: staff space in absolute units
-#let draw-articulations(x, note-y, articulations, stem-dir, y-top, sp: 1.0) = {
+#let draw-articulations(x, note-y, articulations, stem-dir, y-top, sp: 1.0, font-config: make-music-font-config()) = {
   import "@preview/cetz:0.4.2"
   import cetz.draw: *
+  let font-name = font-config.at("font", default: "Bravura")
 
   if articulations.len() == 0 { return }
 
@@ -54,7 +56,7 @@
         content(
           (x, cur-y),
           anchor: "south",
-          text(font: "Bravura", size: default-music-font-size-factor * sp * 1mm, glyph),
+          text(font: font-name, size: default-music-font-size-factor * sp * 1mm, glyph),
         )
         cur-y += art-spacing
       }
@@ -71,7 +73,7 @@
         content(
           (x, cur-y),
           anchor: "north",
-          text(font: "Bravura", size: default-music-font-size-factor * sp * 1mm, glyph),
+          text(font: font-name, size: default-music-font-size-factor * sp * 1mm, glyph),
         )
         cur-y -= art-spacing
       }
@@ -88,7 +90,7 @@
     content(
       (x, fermata-y),
       anchor: "south",
-      text(font: "Bravura", size: default-music-font-size-factor * sp * 1mm, smufl-articulations.fermata-above),
+      text(font: font-name, size: default-music-font-size-factor * sp * 1mm, smufl-articulations.fermata-above),
     )
   }
 }
@@ -101,9 +103,10 @@
 /// - dynamic: string e.g. "f", "pp", "mf", "sfz", "fp"
 /// - sp: staff space in absolute units
 /// - extra-offset: additional downward offset (e.g. for articulations below the staff)
-#let draw-dynamic(x, y-bottom, dynamic, sp: 1.0, extra-offset: 0.0) = {
+#let draw-dynamic(x, y-bottom, dynamic, sp: 1.0, extra-offset: 0.0, font-config: make-music-font-config()) = {
   import "@preview/cetz:0.4.2"
   import cetz.draw: *
+  let font-name = font-config.at("font", default: "Bravura")
 
   if dynamic == none or dynamic == "" { return }
 
@@ -119,7 +122,7 @@
     content(
       (x, dyn-y),
       anchor: "north",
-      text(font: "Bravura", size: default-music-font-size-factor * sp * 1mm, glyph-str),
+      text(font: font-name, size: default-music-font-size-factor * sp * 1mm, glyph-str),
     )
   } else {
     // Fallback: render as italic text
