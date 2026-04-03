@@ -5,14 +5,14 @@
 
 #import "@preview/cetz:0.4.2"
 #import "constants.typ": *
-#import "glyph-metadata.typ": advance-width
+#import "glyph-metadata.typ": advance-width, make-music-font-config
 
 /// Get the notehead width for a given duration (in staff-space units).
-#let _nh-width(duration) = {
+#let _nh-width(duration, font-config: make-music-font-config()) = {
   let smufl = if duration == 1 { "noteheadWhole" }
     else if duration == 2 { "noteheadHalf" }
     else { "noteheadBlack" }
-  advance-width(smufl)
+  advance-width(smufl, font-config: font-config)
 }
 
 /// Draw a single curved arc (used for both ties and slurs).
@@ -76,7 +76,7 @@
 /// - y-top: absolute y of top staff line
 /// - sp: staff space
 /// - adj-stem-dirs: dictionary of str(i) -> stem-dir overrides (from beaming)
-#let draw-ties-and-slurs(items, item-xs, y-top, sp: 1.0, adj-stem-dirs: (:)) = {
+#let draw-ties-and-slurs(items, item-xs, y-top, sp: 1.0, adj-stem-dirs: (:), font-config: make-music-font-config()) = {
   import cetz.draw: *
 
   let get-stem-dir(i, item) = {
@@ -105,8 +105,8 @@
     let direction = if stem-dir == "up" { -1.0 } else { 1.0 }
 
     // Compute notehead-edge x coordinates
-    let nh-w = _nh-width(ev.duration) * sp
-    let nh-w-next = _nh-width(next-item.event.duration) * sp
+    let nh-w = _nh-width(ev.duration, font-config: font-config) * sp
+    let nh-w-next = _nh-width(next-item.event.duration, font-config: font-config) * sp
 
     // Start x: right edge of first notehead. End x: left edge of second notehead.
     let start-x = item-xs.at(i) + nh-w / 2.0 * 0.8
@@ -143,8 +143,8 @@
       // Slur curves opposite to stem direction
       let direction = if stem-dir == "up" { -1.0 } else { 1.0 }
 
-      let nh-w-start = _nh-width(start-ev.duration) * sp
-      let nh-w-end = _nh-width(ev.duration) * sp
+      let nh-w-start = _nh-width(start-ev.duration, font-config: font-config) * sp
+      let nh-w-end = _nh-width(ev.duration, font-config: font-config) * sp
 
       let start-x = item-xs.at(start-idx) + nh-w-start / 2.0 * 0.8
       let end-x = item-xs.at(i) - nh-w-end / 2.0 * 0.8
