@@ -4,6 +4,7 @@
 
 #import "@preview/cetz:0.4.2"
 #import "constants.typ": *
+#import "glyph-metadata.typ": make-music-font-config
 #import "render-staff.typ": draw-staff-lines, draw-barline, draw-system-line, draw-brace, draw-bracket
 #import "render-clef-key-time.typ": draw-clef, draw-key-signature, draw-time-signature, clef-advance, key-sig-advance, time-sig-advance
 #import "render-notes.typ": draw-note, draw-rest, note-stem-x, draw-chord-event
@@ -41,6 +42,7 @@
   forced-music-start-x: none,
   skip-barlines: false,
   fingering-position: "above",
+  font-config: make-music-font-config(),
 ) = {
   import cetz.draw: *
 
@@ -59,13 +61,13 @@
   let time-w = 0.0
 
   if show-clef {
-    clef-w = clef-advance(clef-name: clef-name, sp: sp)
+    clef-w = clef-advance(clef-name: clef-name, sp: sp, font-config: font-config)
   }
   if show-key {
-    key-w = key-sig-advance(key, sp: sp)
+    key-w = key-sig-advance(key, sp: sp, font-config: font-config)
   }
   if show-time {
-    time-w = time-sig-advance(time-upper, time-lower, symbol: time-symbol, sp: sp)
+    time-w = time-sig-advance(time-upper, time-lower, symbol: time-symbol, sp: sp, font-config: font-config)
   }
 
   let music-start-x = if forced-music-start-x != none {
@@ -106,19 +108,19 @@
   // Draw clef
   let cx = prefix-x
   if show-clef {
-    draw-clef(cx, y-top, clef-name, sp: sp)
+    draw-clef(cx, y-top, clef-name, sp: sp, font-config: font-config)
     cx += clef-w
   }
 
   // Draw key signature
   if show-key {
-    draw-key-signature(cx, y-top, key, clef-name, sp: sp)
+    draw-key-signature(cx, y-top, key, clef-name, sp: sp, font-config: font-config)
     cx += key-w
   }
 
   // Draw time signature
   if show-time {
-    draw-time-signature(cx, y-top, time-upper, time-lower, symbol: time-symbol, sp: sp)
+    draw-time-signature(cx, y-top, time-upper, time-lower, symbol: time-symbol, sp: sp, font-config: font-config)
     cx += time-w
   }
 
@@ -176,7 +178,7 @@
       let t = if xn != x0 { (xi - x0) / (xn - x0) } else { 0.0 }
       let by-staff = sy0 + t * (syn - sy0)   // staff-sp units
       let by-abs   = y-top + by-staff * sp   // absolute canvas y
-      let sx = note-stem-x(xi, item.event.duration, stem-dir, sp: sp)
+      let sx = note-stem-x(xi, item.event.duration, stem-dir, sp: sp, font-config: font-config)
       beam-note-data.push((stem-x: sx, beam-y: by-abs, duration: item.event.duration, stem-dir: stem-dir))
       adj-stem-ends.insert(str(idx), by-staff)
       adj-stem-dirs.insert(str(idx), stem-dir)
@@ -276,11 +278,12 @@
         clef: clef-name,
         sp: sp,
         beamed: is-beamed,
+        font-config: font-config,
       )
 
       // Draw articulations near the notehead
       if event.articulations.len() > 0 {
-        draw-articulations(x, y-top + y, event.articulations, actual-stem-dir, y-top, sp: sp)
+        draw-articulations(x, y-top + y, event.articulations, actual-stem-dir, y-top, sp: sp, font-config: font-config)
       }
 
       // Draw dynamic below the staff
@@ -299,7 +302,7 @@
             }
           }
         }
-        draw-dynamic(x, y-bottom, event.dynamic, sp: sp, extra-offset: dyn-extra)
+        draw-dynamic(x, y-bottom, event.dynamic, sp: sp, extra-offset: dyn-extra, font-config: font-config)
       }
 
       // Draw inline fingering(s)
@@ -378,6 +381,7 @@
         clef: clef-name,
         sp: sp,
         beamed: is-beamed,
+        font-config: font-config,
       )
 
       // Draw articulations near the outermost note of the chord
@@ -387,7 +391,7 @@
         } else {
           chord-ys-abs.fold(chord-ys-abs.at(0), calc.min)
         }
-        draw-articulations(x, art-note-y, event.articulations, actual-stem-dir, y-top, sp: sp)
+        draw-articulations(x, art-note-y, event.articulations, actual-stem-dir, y-top, sp: sp, font-config: font-config)
       }
 
       // Draw dynamic below the staff
@@ -406,7 +410,7 @@
             }
           }
         }
-        draw-dynamic(x, y-bottom, event.dynamic, sp: sp, extra-offset: dyn-extra)
+        draw-dynamic(x, y-bottom, event.dynamic, sp: sp, extra-offset: dyn-extra, font-config: font-config)
       }
 
       // Draw inline fingering(s)
@@ -457,7 +461,7 @@
       }
 
     } else if event.type == "rest" {
-      draw-rest(x, y-top + y, event.duration, dots: event.dots, sp: sp)
+      draw-rest(x, y-top + y, event.duration, dots: event.dots, sp: sp, font-config: font-config)
     } else if event.type == "barline" {
       // All barlines except the very last item are drawn at their layout position.
       // The last barline is drawn at the right edge (handled below).
@@ -547,7 +551,7 @@
   }
 
   // ── Draw ties and slurs ──────────────────────────────────────────────────
-  draw-ties-and-slurs(items, item-xs, y-top, sp: sp, adj-stem-dirs: adj-stem-dirs)
+  draw-ties-and-slurs(items, item-xs, y-top, sp: sp, adj-stem-dirs: adj-stem-dirs, font-config: font-config)
 }
 
 /// Render a complete score as a CeTZ canvas block.
@@ -579,6 +583,7 @@
   lyricist: none,
   show-time: true,
   fingering-positions: (),
+  font-config: make-music-font-config(),
 ) = {
   let unit = sp / 1mm  // work in mm inside CeTZ (length: 1mm)
   let avail-width = if width == auto { none } else { width / 1mm }
@@ -602,9 +607,9 @@
   // barlines align horizontally in a grand staff / multi-staff system.
   let shared-music-start-x = laid-out-staves.fold(0.0, (mx, laid-out) => {
     let clef-name = laid-out.clef
-    let clef-w = clef-advance(clef-name: clef-name, sp: unit)
-    let key-w = key-sig-advance(key, sp: unit)
-    let time-w = if show-time { time-sig-advance(time-upper, time-lower, symbol: time-symbol, sp: unit) } else { 0.0 }
+    let clef-w = clef-advance(clef-name: clef-name, sp: unit, font-config: font-config)
+    let key-w = key-sig-advance(key, sp: unit, font-config: font-config)
+    let time-w = if show-time { time-sig-advance(time-upper, time-lower, symbol: time-symbol, sp: unit, font-config: font-config) } else { 0.0 }
     let prefix-x = 0.5 * unit
     let msX = prefix-x + clef-w + key-w + time-w + 1.0 * unit
     let first-note = laid-out.items.find(item => item.event.type == "note")
@@ -637,6 +642,7 @@
           forced-music-start-x: shared-music-start-x,
           skip-barlines: use-spanning-barlines,
           fingering-position: if i < fingering-positions.len() { fingering-positions.at(i) } else { "above" },
+          font-config: font-config,
         )
       }
 
@@ -656,7 +662,7 @@
         draw-system-line(sys-y-top, sys-y-bottom, sp: unit)
 
         if staff-group == "grand" {
-          draw-brace(sys-y-top, sys-y-bottom, sp: unit)
+          draw-brace(sys-y-top, sys-y-bottom, sp: unit, font-config: font-config)
 
           // Compute y-top of each staff for repeat dot placement
           let staff-y-tops = range(num-staves).map(si => total-offset - si * (staff-height-mm + spacing-mm))
